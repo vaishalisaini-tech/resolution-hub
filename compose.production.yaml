@@ -1,0 +1,9 @@
+services:
+  hub:
+    environment:
+      APP_ENV: production
+      COOKIE_SECURE: "true"
+      UPLOAD_SCAN: required
+      CLAMSCAN_PATH: /usr/bin/clamscan
+    volumes:
+      - "${CLAMAV_DB_DIR:?Set CLAMAV_DB_DIR to an approved up-to-date ClamAV signature directory}:/var/lib/clamav:ro"

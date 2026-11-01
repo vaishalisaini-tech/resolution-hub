@@ -1,0 +1,59 @@
+def call(messages,cfg,json_mode=False):
+    """Bounded transient retries. Never retry depleted quota/auth/validation errors."""
+    import time,random
+    if cfg['provider']=='evidence':raise HTTPException(422,'Configure an approved AI provider first')
+    if not cfg['model']:raise HTTPException(422,'AI model is not configured')
+    base=endpoint(cfg)
+    is_gemini=urlparse(base).hostname=='generativelanguage.googleapis.com'
+    if cfg['provider']=='ollama':
+        url=base+'/api/chat'
+        payload={'model':cfg['model'],'messages':messages,'stream':False,'options':{'temperature':0}}
+        if json_mode:payload['format']='json'
+        headers={}
+    else:
+        url=base+'/chat/completions'
+        payload={'model':cfg['model'],'messages':messages}
+        # Google documents removal of sampling overrides for newer Gemini models.
+        if not is_gemini:payload['temperature']=0
+        if json_mode:payload['response_format']={'type':'json_object'}
+        headers={'Authorization':'Bearer '+os.getenv('OPENAI_API_KEY','')}
+    attempts=3
+    with httpx.Client(timeout=httpx.Timeout(25.0,connect=5.0),trust_env=False) as client:
+        for attempt in range(attempts):
+            try:
+                r=client.post(url,headers=headers,json=payload)
+            except (httpx.TimeoutException,httpx.NetworkError):
+                if attempt+1<attempts:
+                    time.sleep((2**attempt)+random.uniform(0,.3));continue
+                raise HTTPException(502,{'message':'AI connection failed after bounded retries','attempts':attempts,'hint':'Check approved network/proxy access and provider availability. No answer was fabricated.'})
+            except httpx.RequestError:
+                raise HTTPException(502,'AI transport error. Check the approved endpoint and network configuration.')
+            if r.status_code in (502,503,504) and attempt+1<attempts:
+                delay=(2**attempt)+random.uniform(0,.3)
+                retry=r.headers.get('retry-after','')
+                try:delay=max(delay,float(retry))
+                except (ValueError,TypeError):pass
+                # Do not sleep indefinitely on a long Retry-After header.
+                if delay<=8:
+                    time.sleep(delay);continue
+            if r.is_error:
+                code='';provider_status=''
+                try:
+                    error=r.json().get('error',{})
+                    if isinstance(error,dict):
+                        code=str(error.get('code',''))[:80]
+                        provider_status=str(error.get('status',''))[:80]
+                except (ValueError,AttributeError):pass
+                if r.status_code==503:hint='Provider unavailable/overloaded after bounded retries. Retry later or explicitly select another supported model available to your project. Do not reset the database or rotate a key solely for this status.'
+                elif r.status_code==429:hint='Inspect project quota/rate limits. Exhausted credits require billing/quota action, not repeated retries.'
+                elif r.status_code in (401,403):hint='Check provider credentials, project permissions and access. This is a provider response, not a local login failure.'
+                elif r.status_code==404:hint='Check the saved API base path and model availability.'
+                else:hint='Check provider request compatibility, model access and service status.'
+                raise HTTPException(502,{'message':'AI provider rejected the request','upstream_status':r.status_code,'code':code,'provider_status':provider_status,'attempts':attempt+1,'hint':hint})
+            try:
+                data=r.json()
+                result=data['message']['content'] if cfg['provider']=='ollama' else data['choices'][0]['message']['content']
+                if not isinstance(result,str) or not result.strip():raise ValueError('Empty answer')
+                return result
+            except (KeyError,IndexError,TypeError,ValueError):
+                raise HTTPException(502,'AI returned an empty or unsupported response. No answer was fabricated.')

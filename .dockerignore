@@ -1,0 +1,13 @@
+.env
+.venv/
+data/
+*.db
+*.db-wal
+*.db-shm
+__pycache__/
+.pytest_cache/
+*.pyc
+clamav-signatures/
+tests/
+docs/
+.git/

@@ -1,0 +1,20 @@
+test_503_then_success (__main__.ProviderTests.test_503_then_success) ... ok
+test_empty_rejected (__main__.ProviderTests.test_empty_rejected) ... ok
+test_gemini_no_sampling_override (__main__.ProviderTests.test_gemini_no_sampling_override) ... ok
+test_long_retry_after_not_ignored (__main__.ProviderTests.test_long_retry_after_not_ignored) ... ok
+test_no_auth_retry (__main__.ProviderTests.test_no_auth_retry) ... ok
+test_no_quota_retry (__main__.ProviderTests.test_no_quota_retry) ... ok
+test_other_provider_keeps_temperature (__main__.ProviderTests.test_other_provider_keeps_temperature) ... ok
+test_retry_bounded (__main__.ProviderTests.test_retry_bounded) ... ok
+test_answer_prefill_no_automatic_save (__main__.UpdateTests.test_answer_prefill_no_automatic_save) ... ok
+test_apply_backup_and_migration (__main__.UpdateTests.test_apply_backup_and_migration) ... ok
+test_customized_source_refused (__main__.UpdateTests.test_customized_source_refused) ... ok
+test_migrate_only_resolved_drafts (__main__.UpdateTests.test_migrate_only_resolved_drafts) ... ok
+test_missing_db_refused (__main__.UpdateTests.test_missing_db_refused) ... ok
+test_new_save_status (__main__.UpdateTests.test_new_save_status) ... ok
+test_source_transform_and_js_syntax (__main__.UpdateTests.test_source_transform_and_js_syntax) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 1.836s
+
+OK

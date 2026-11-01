@@ -1,0 +1,68 @@
+# ─────────────────────────────────────────────
+# Secrets & environment
+# ─────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ─────────────────────────────────────────────
+# Python
+# ─────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Test / tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+
+# ─────────────────────────────────────────────
+# Application data (never commit live data or DBs)
+# ─────────────────────────────────────────────
+data/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+upgrade-backups/
+clamav-signatures/
+
+# Instance branding uploaded at runtime
+logo.png
+
+# ─────────────────────────────────────────────
+# Release artifacts / archives
+# ─────────────────────────────────────────────
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# ─────────────────────────────────────────────
+# Editor / OS
+# ─────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
