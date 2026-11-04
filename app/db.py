@@ -13,7 +13,10 @@ def config():
     return c
 @contextmanager
 def db():
-    p=Path(os.getenv('DATABASE_PATH','data/hub-v3.db'));p.parent.mkdir(parents=True,exist_ok=True)
+    raw = os.getenv('DATABASE_PATH', 'data/hub-v3.db')
+    if os.getenv('VERCEL'):                      # on Vercel only /tmp is writable
+        raw = '/tmp/' + Path(raw).name
+    p = Path(raw); p.parent.mkdir(parents=True, exist_ok=True)
     c=sqlite3.connect(p,timeout=20);c.row_factory=sqlite3.Row;c.execute('PRAGMA foreign_keys=ON')
     try:yield c;c.commit()
     except Exception:c.rollback();raise
