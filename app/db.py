@@ -72,14 +72,15 @@ def init():
         if used-{w['id'] for w in cfg['workspaces']}:raise RuntimeError('Cannot remove populated workspace IDs')
 
     # Bootstrap admin from env (needed on Vercel: /tmp DB starts empty)
+        # Bootstrap admin from env (needed on Vercel: /tmp DB starts empty)
     admin_user=os.getenv('ADMIN_USERNAME','').strip().lower();admin_pw=os.getenv('ADMIN_PASSWORD','')
     if admin_user and admin_pw:
-        import uuid,time,json
+        import uuid as _uuid,time as _time,json as _json
         from .security import hash_password
         with db() as c:
             if not c.execute('SELECT 1 FROM users WHERE username=?',(admin_user,)).fetchone():
                 c.execute('INSERT INTO users(id,username,display_name,password,role,workspaces,active,must_change,created,email) VALUES(?,?,?,?,?,?,?,?,?,?)',
-                          (str(uuid.uuid4()),admin_user,admin_user.title(),hash_password(admin_pw),'Administrator',json.dumps(['*']),1,0,time.time(),''))
+                          (str(_uuid.uuid4()),admin_user,admin_user.title(),hash_password(admin_pw),'Administrator',_json.dumps(['*']),1,0,_time.time(),''))
                 c.commit()
 def audit(c,actor,action,target='',workspace=''):
     row=c.execute('SELECT hash FROM audit ORDER BY id DESC LIMIT 1').fetchone();prev=row[0] if row else '0'*64;t=time.time()
