@@ -32,9 +32,10 @@ app.add_middleware(BodyLimit)
 @app.middleware('http')
 async def guards(request,call_next):
     if request.method not in ['GET','HEAD','OPTIONS']:
-        origin=request.headers.get('origin','')
-        allowed=os.getenv('ALLOWED_ORIGINS','http://127.0.0.1:8001,http://localhost:8001').split(',')
-        if origin and origin not in allowed:return JSONResponse({'detail':'Origin not allowed'},status_code=403)
+        if os.getenv('ORIGIN_CHECK','on').lower()!='off':
+            origin=request.headers.get('origin','').strip().rstrip('/')
+            allowed={o.strip().strip('"\'').rstrip('/') for o in os.getenv('ALLOWED_ORIGINS','http://127.0.0.1:8001,http://localhost:8001').split(',') if o.strip()}
+            if origin and origin not in allowed:return JSONResponse({'detail':'Origin not allowed'},status_code=403)
         if request.headers.get('sec-fetch-site')=='cross-site':return JSONResponse({'detail':'Cross-site request denied'},status_code=403)
     try:r=await call_next(request)
     except Exception:
