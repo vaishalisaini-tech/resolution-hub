@@ -70,6 +70,17 @@ def init():
         c.execute('INSERT OR IGNORE INTO settings VALUES(1,1,?)',(json.dumps(initial),))
         used={r[0] for r in c.execute('SELECT workspace FROM knowledge UNION SELECT workspace FROM conversations UNION SELECT workspace FROM assets')}
         if used-{w['id'] for w in cfg['workspaces']}:raise RuntimeError('Cannot remove populated workspace IDs')
+
+    # Bootstrap admin from env (needed on Vercel: /tmp DB starts empty)
+    admin_user=os.getenv('ADMIN_USERNAME','').strip().lower();admin_pw=os.getenv('ADMIN_PASSWORD','')
+    if admin_user and admin_pw:
+        import uuid,time,json
+        from .security import hash_password
+        with db() as c:
+            if not c.execute('SELECT 1 FROM users WHERE username=?',(admin_user,)).fetchone():
+                c.execute('INSERT INTO users(id,username,display_name,password,role,workspaces,active,must_change,created,email) VALUES(?,?,?,?,?,?,?,?,?,?)',
+                          (str(uuid.uuid4()),admin_user,admin_user.title(),hash_password(admin_pw),'Administrator',json.dumps(['*']),1,0,time.time(),''))
+                c.commit()
 def audit(c,actor,action,target='',workspace=''):
     row=c.execute('SELECT hash FROM audit ORDER BY id DESC LIMIT 1').fetchone();prev=row[0] if row else '0'*64;t=time.time()
     h=hashlib.sha256(json.dumps([actor,action,target,workspace,t,prev],separators=(',',':')).encode()).hexdigest()
